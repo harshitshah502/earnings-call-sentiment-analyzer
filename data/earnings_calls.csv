@@ -1,0 +1,11 @@
+company,quarter,call_text,label,revenue_growth_pct,stock_return_pct
+Apple,2026-Q1,Revenue grew 8% year over year and iPhone demand remained strong. We are confident about the next quarter.,Positive,8.0,24.5
+Apple,2026-Q2,Revenue was below expectations and supply constraints affected shipments. We remain cautious about the near term.,Negative,-2.0,21.1
+Microsoft,2026-Q1,Cloud revenue accelerated and Azure demand was broad based. Management expects continued healthy growth.,Positive,15.0,32.4
+Microsoft,2026-Q2,"Operating expenses increased faster than expected, although cloud bookings remained solid.",Neutral,5.0,29.8
+Tesla,2026-Q1,Vehicle deliveries declined and pricing pressure affected margins. We are taking actions to improve efficiency.,Negative,-8.0,18.2
+Tesla,2026-Q2,Demand improved during the quarter and production efficiency increased. We expect margins to stabilize.,Positive,6.0,20.4
+Amazon,2026-Q1,AWS growth remained strong while advertising revenue reached another record. We see substantial opportunities ahead.,Positive,12.0,31.6
+Amazon,2026-Q2,"Retail demand softened and fulfillment costs increased, but AWS continued to perform well.",Neutral,3.0,30.2
+Nvidia,2026-Q1,Data center demand was exceptional and customers continued to invest heavily in accelerated computing.,Positive,28.0,44.2
+Nvidia,2026-Q2,Growth moderated from an unusually strong base and export restrictions created uncertainty.,Negative,-4.0,39.5
