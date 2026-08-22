@@ -1,74 +1,30 @@
+# Earnings Call Sentiment Analyzer — Version 2.0
 
-# Real-Time Earnings Call & Sentiment Analyzer — Prototype
+V2.0 changes the workflow from a fixed CSV demo to automatic company lookup and live market/financial retrieval.
 
-## What this project does
-This prototype analyzes earnings-call text, assigns a sentiment score, classifies the call as Positive/Neutral/Negative, and combines the sentiment with simple financial indicators to generate a BUY/HOLD/SELL demonstration signal.
+**Company name → ticker → live data → automatic analysis → dashboard**
 
-## Tech stack
-- Python
-- Pandas
-- Streamlit
-- Plotly
-- Rule-based NLP sentiment scoring
-- CSV dataset
+Try Apple, Microsoft, Tesla, NVIDIA, Amazon, AAPL, MSFT or NVDA.
 
-## Folder structure
-```
-earnings_call_sentiment_analyzer/
-├── app.py
-├── requirements.txt
-├── README.md
-├── data/
-│   └── earnings_calls.csv
-└── src/
-    ├── __init__.py
-    ├── preprocess.py
-    └── sentiment.py
+## Run on this PC
+
+```powershell
+$env:PYTHONPATH="D:\Lib\site-packages"
+D:\python.exe -m pip install -r requirements.txt
+D:\python.exe -m streamlit run app.py
 ```
 
-## Run locally
-Open a terminal in this folder:
+V2.0 displays current price, short-term movement, market cap, 52-week performance, company information, revenue, margin, P/E, dividend yield, historical prices, quarterly financial rows and recent earnings dates.
 
-### Windows
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
-```
+## Data-source note
 
-### macOS/Linux
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-```
+V2.0 uses yfinance, an open-source package that accesses publicly available Yahoo Finance data and is intended for research/educational use. It is not affiliated with Yahoo. A later production version should use licensed/official APIs where appropriate.
 
-Then open the local Streamlit URL shown in the terminal.
+## Next versions
 
-## Google Colab
-The dashboard is intended to run locally. The Python modules and CSV can also be imported in Colab for experiments.
-
-## Algorithm
-1. Load earnings-call records from CSV.
-2. Normalize the text.
-3. Tokenize the text into words.
-4. Calculate a weighted sentiment score using positive/negative financial vocabulary.
-5. Convert the score into Positive, Neutral, or Negative.
-6. Combine sentiment with revenue growth and stock return to create a simple demonstration signal.
-7. Visualize sentiment, returns, and company-level statistics.
-
-## Important academic note
-The BUY/HOLD/SELL output is a prototype research signal, not financial advice and not a production trading strategy. For a research paper, the next step should be to replace the rule-based sentiment engine with a trained transformer model and evaluate it with precision, recall, F1-score, and an out-of-sample backtest.
-
-## Next upgrade
-A production/live version can add:
-- earnings-call API ingestion
-- speech-to-text
-- FinBERT/financial transformer sentiment
-- real-time streaming
-- database storage
-- historical backtesting
-- authentication
-- cloud deployment
+V2.1: earnings-call transcript retrieval
+V2.2: FinBERT financial sentiment
+V2.3: key topics, risks and outlook
+V2.4: signal engine
+V2.5: backtesting and evaluation
+V3.0: live multi-source earnings intelligence dashboard
