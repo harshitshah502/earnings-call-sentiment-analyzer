@@ -269,8 +269,13 @@ if "ai_suite" in st.session_state:
         st.json(suite["csp"])
         st.caption("The constraint layer checks whether the evidence needed for a complete AI analysis is available.")
 
-    with st.expander("🎮 Adversarial Search"):
-        st.write("Minimax and Alpha-Beta remain available as scenario-search components; they are not presented as stock-price predictors.")
+    with st.expander("🎮 Scenario Analysis — Minimax + Alpha-Beta"):
+        adv = suite["adversarial"]
+        a,b = st.columns(2)
+        a.metric("Minimax result", f'{adv["minimax"]:.2f}')
+        b.metric("Alpha-Beta result", f'{adv["alpha_beta"]:.2f}')
+        st.write("Scenario leaf scores:", [round(x, 2) for x in adv["leaf_scores"]])
+        st.caption("These algorithms evaluate a small adversarial scenario tree using the current sentiment and momentum evidence; they are not stock-price predictors.")
 
     with st.expander("📄 Earnings Transcript"):
         if ts:
