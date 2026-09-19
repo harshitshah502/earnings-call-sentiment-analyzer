@@ -133,7 +133,7 @@ if st.button("🧠 Analyze Earnings Call",type="primary"):
                 c1,c2,c3=st.columns(3)
                 c1.metric("Transcript Entries",ts["entries"])
                 c2.metric("AI Sentiment",ts["label"])
-                c3.metric("Sentiment Score",f'{ts["average_sentiment"]:.3f}')
+                c3.metric("Sentiment Score",f'{ts["average_sentiment"]:.3f}')\n                st.session_state["transcript_score"] = ts["average_sentiment"]
                 if ts["label"]=="Positive":
                     st.success("Management sentiment is predominantly positive.")
                 elif ts["label"]=="Negative":
