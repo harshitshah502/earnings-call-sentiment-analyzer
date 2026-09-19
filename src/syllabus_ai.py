@@ -289,6 +289,46 @@ def expert_system(sentiment, tree, regime, momentum, volatility):
         "backward_positive": backward_chain("positive_analysis_state", facts, rules),
     }
 
+def minimax(values, depth, maximizing):
+    if depth == 0 or len(values) == 1:
+        return float(np.mean(values))
+    mid = max(1, len(values) // 2)
+    left = values[:mid]
+    right = values[mid:]
+    if maximizing:
+        return max(minimax(left, depth - 1, False), minimax(right, depth - 1, False))
+    return min(minimax(left, depth - 1, True), minimax(right, depth - 1, True))
+
+def alpha_beta(values, depth, alpha, beta, maximizing):
+    if depth == 0 or len(values) == 1:
+        return float(np.mean(values))
+    mid = max(1, len(values) // 2)
+    branches = [values[:mid], values[mid:]]
+    if maximizing:
+        value = -float("inf")
+        for branch in branches:
+            value = max(value, alpha_beta(branch, depth - 1, alpha, beta, False))
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+        return value
+    value = float("inf")
+    for branch in branches:
+        value = min(value, alpha_beta(branch, depth - 1, alpha, beta, True))
+        beta = min(beta, value)
+        if alpha >= beta:
+            break
+    return value
+
+def adversarial_scenario(sentiment, momentum):
+    base = float(sentiment * 100 + momentum * 100)
+    leaves = [base + 25, base - 10, base + 10, base - 25]
+    return {
+        "minimax": minimax(leaves, 2, True),
+        "alpha_beta": alpha_beta(leaves, 2, -float("inf"), float("inf"), True),
+        "leaf_scores": leaves,
+    }
+
 def csp_validate(tree, kmeans, sentiment):
     checks = {
         "historical_data_available": tree is not None and kmeans is not None,
@@ -306,6 +346,7 @@ def run_ai_pipeline(history, sentiment_score=0.0):
     volatility = float(f["volatility_20d"].iloc[-1])
     regime = clusters["regime"] if clusters else "Unknown"
     expert = expert_system(sentiment_score, tree, regime, momentum, volatility)
+    adversarial = adversarial_scenario(sentiment_score, momentum)
     ga = genetic_optimize_weights(f) if len(f) >= 80 else None
     hill = hill_climb_threshold(f, ga["weights"]) if ga else None
     return {
@@ -313,6 +354,7 @@ def run_ai_pipeline(history, sentiment_score=0.0):
         "kmeans": clusters,
         "expert": expert,
         "csp": csp_validate(tree, clusters, sentiment_score),
+        "adversarial": adversarial,
         "optimization": {"genetic": ga, "hill_climbing": hill},
         "search": {
             "BFS": bfs("Company", "Market Regime"),
