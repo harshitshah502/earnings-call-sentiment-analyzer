@@ -1,9 +1,11 @@
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 from src.company_resolver import resolve_company
 from src.market_data import fetch_company_data
 from src.analysis import build_snapshot
 from src.transcript_analysis import transcript_summary
+from src.syllabus_ai import run_ai_pipeline
 
 st.set_page_config(page_title="Earnings Intelligence", page_icon="📈", layout="wide")
 
@@ -177,14 +179,7 @@ if st.button("🚀 Run Full AI Analysis", type="primary"):
             st.error("AI analysis could not be completed.")
             st.exception(exc)
 
-try:
-    from src.syllabus_ai import run_ai_pipeline
-except Exception as exc:
-    run_ai_pipeline = None
-    st.error("AI engine dependency is missing.")
-    st.caption(str(exc))
-
-if run_ai_pipeline is not None and "ai_suite" in st.session_state:
+if "ai_suite" in st.session_state:
     suite = st.session_state["ai_suite"]
     tree = suite["decision_tree"]
     km = suite["kmeans"]
