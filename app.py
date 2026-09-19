@@ -154,88 +154,136 @@ with st.expander("🔧 Technical Details"):
 
 
 
+
 # =============================
-# AI Syllabus Lab
+# Integrated AI Intelligence
 # =============================
-st.markdown("## 🧠 AI Syllabus Lab")
-st.caption("Algorithms from the AI course are applied to the live company analysis pipeline.")
+st.markdown("## 🧠 AI Intelligence Engine")
+st.caption("The AI algorithms are part of the company-analysis workflow, not standalone demonstrations.")
+
+ml_history = data["ticker"].history(period="5y", auto_adjust=True)
+quarter = st.text_input("Earnings quarter for AI analysis (YYYYQM)", value="2025Q4", key="ai_quarter")
+
+if st.button("🚀 Run Full AI Analysis", type="primary"):
+    with st.spinner("Running market ML, earnings sentiment, clustering and expert reasoning..."):
+        try:
+            ts = transcript_summary(company["ticker"], quarter)
+            sentiment_score = float(ts["average_sentiment"]) if ts else 0.0
+            suite = run_ai_pipeline(ml_history, sentiment_score)
+            st.session_state["ai_suite"] = suite
+            st.session_state["transcript_score"] = sentiment_score
+            st.session_state["ai_transcript"] = ts
+        except Exception as exc:
+            st.error("AI analysis could not be completed.")
+            st.exception(exc)
 
 try:
-    from src.syllabus_ai import run_syllabus_suite
-    transcript_score = float(st.session_state.get("transcript_score", 0.0))
-    if st.button("⚙️ Run AI Syllabus Analysis", type="primary"):
-        with st.spinner("Running Decision Tree, K-Means, search, optimization and reasoning algorithms..."):
-            suite = run_syllabus_suite(history, transcript_score)
-        st.session_state["ai_suite"] = suite
+    from src.syllabus_ai import run_ai_pipeline
 except Exception as exc:
-    st.warning("AI syllabus module is not ready yet.")
+    run_ai_pipeline = None
+    st.error("AI engine dependency is missing.")
     st.caption(str(exc))
 
-if "ai_suite" in st.session_state:
+if run_ai_pipeline is not None and "ai_suite" in st.session_state:
     suite = st.session_state["ai_suite"]
-    tabs = st.tabs(["🌳 ML", "🔵 K-Means", "🔎 Search", "🧬 Optimization", "🎮 Adversarial", "🧠 Logic & CSP"])
+    tree = suite["decision_tree"]
+    km = suite["kmeans"]
+    expert = suite["expert"]
+    ts = st.session_state.get("ai_transcript")
 
-    with tabs[0]:
-        st.markdown("### Decision Tree")
-        tree = suite["decision_tree"]
-        if tree:
-            a,b,c,d = st.columns(4)
-            a.metric("Prediction", tree["prediction"])
-            b.metric("Confidence", f'{tree["confidence"]*100:.1f}%')
-            c.metric("Test Accuracy", f'{tree["accuracy"]*100:.1f}%')
-            d.metric("Tree Depth", tree["depth"])
+    st.markdown("### 🌳 AI Market Model")
+    a,b,c,d = st.columns(4)
+    if tree:
+        a.metric("Decision Tree", tree["prediction"])
+        b.metric("Confidence", f'{tree["confidence"]*100:.1f}%')
+        c.metric("Validation Accuracy", f'{tree["accuracy"]*100:.1f}%')
+        d.metric("Training Samples", tree["samples"])
+    else:
+        st.warning("The Decision Tree needs more historical observations.")
+
+    if tree:
+        l,r = st.columns([1,1])
+        with l:
+            st.markdown("**Feature importance**")
             st.dataframe(tree["importance"], use_container_width=True, hide_index=True)
-            st.caption("The tree is trained on historical price-derived features and classifies the next 20-day return regime.")
-        else:
-            st.info("Not enough historical data to train the Decision Tree.")
+        with r:
+            st.markdown("**Current model inputs**")
+            feature_df = pd.DataFrame({"Feature": list(tree["features"].keys()), "Value": list(tree["features"].values())})
+            st.dataframe(feature_df, use_container_width=True, hide_index=True)
 
-    with tabs[1]:
-        st.markdown("### K-Means Market Regimes")
-        km = suite["kmeans"]
-        if km:
-            a,b = st.columns(2)
-            a.metric("Current Cluster", km["cluster"])
-            b.metric("Silhouette Score", f'{km["silhouette"]:.3f}')
-            st.success(f'Current regime: **{km["regime"]}**')
-            kdata = km["data"].copy()
-            kdata["Cluster"] = km["labels"]
-            st.dataframe(kdata.tail(25), use_container_width=True, hide_index=True)
-            st.caption("K-Means groups historical market windows by return, momentum and volatility.")
-        else:
-            st.info("Not enough historical data for clustering.")
+    st.markdown("### 🔵 Market Regime — K-Means")
+    if km:
+        a,b,c = st.columns(3)
+        a.metric("Current Cluster", km["cluster"])
+        b.metric("Regime", km["regime"])
+        c.metric("Silhouette", f'{km["silhouette"]:.3f}')
+        kd = km["data"].copy()
+        kd["Cluster"] = km["labels"]
+        fig_k = go.Figure()
+        fig_k.add_trace(go.Scatter(
+            x=kd["return_20d"], y=kd["volatility_20d"],
+            mode="markers",
+            marker=dict(size=7, color=kd["Cluster"], colorscale="Viridis"),
+            text=[f'Cluster {x}' for x in kd["Cluster"]],
+            hovertemplate="20D return=%{x:.2%}<br>Volatility=%{y:.2%}<br>%{text}<extra></extra>"
+        ))
+        fig_k.update_layout(height=300, margin=dict(l=5,r=5,t=10,b=10), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#aeb8c8"), xaxis_title="20D Return", yaxis_title="20D Volatility")
+        st.plotly_chart(fig_k, use_container_width=True)
 
-    with tabs[2]:
-        st.markdown("### Search Algorithms")
-        st.caption("Graph search over the project's financial-analysis dependency graph.")
-        for name, result in suite["search"].items():
+    st.markdown("### 🎙️ Earnings Intelligence")
+    if ts:
+        a,b = st.columns(2)
+        a.metric("FinBERT Sentiment", ts["label"])
+        b.metric("Sentiment Score", f'{ts["average_sentiment"]:.3f}')
+    else:
+        st.info("No transcript was available for the selected quarter.")
+
+    st.markdown("### 🧠 Expert System")
+    a,b = st.columns([1,2])
+    with a:
+        st.metric("Analysis State", expert["state"])
+        st.write("Backward chaining:", "Goal proved" if expert["backward_positive"] else "Goal not proved")
+    with b:
+        st.markdown("**Facts → Forward-chained evidence**")
+        st.write(", ".join(expert["facts"]))
+        st.write("→", ", ".join(expert["derived"]))
+
+    st.markdown("### 🔍 Why did the AI reach this state?")
+    search_tabs = st.tabs(["BFS","DFS","UCS","Greedy","A*"])
+    for tab, (name, result) in zip(search_tabs, suite["search"].items()):
+        with tab:
             if isinstance(result, tuple):
                 path, cost = result
-                st.write(f"**{name}:** {' → '.join(path)}  | cost = {cost}")
+                st.write(" → ".join(path))
+                st.caption(f"Path cost: {cost}")
             else:
-                st.write(f"**{name}:** {' → '.join(result)}")
+                st.write(" → ".join(result))
+            st.caption("Search is traversing the project's evidence/analysis dependency graph.")
 
-    with tabs[3]:
-        st.markdown("### Optimization Algorithms")
-        a,b = st.columns(2)
-        a.metric("Hill Climbing optimum", suite["optimization"]["Hill Climbing optimum"])
-        b.metric("Genetic Algorithm optimum", suite["optimization"]["Genetic Algorithm optimum"])
-        st.caption("Small deterministic optimization demonstrations mapped into the AI analysis lab.")
+    with st.expander("🧬 Model Optimization — Genetic Algorithm + Hill Climbing"):
+        opt = suite["optimization"]
+        if opt["genetic"] and opt["hill_climbing"]:
+            a,b,c,d = st.columns(4)
+            a.metric("GA validation score", f'{opt["genetic"]["score"]*100:.1f}%')
+            b.metric("Hill-climb threshold", f'{opt["hill_climbing"]["threshold"]:.3f}')
+            c.metric("Threshold validation", f'{opt["hill_climbing"]["accuracy"]*100:.1f}%')
+            d.metric("GA weight sum", f'{sum(opt["genetic"]["weights"]):.2f}')
+            st.caption("GA searches feature weights; Hill Climbing searches the classification threshold.")
 
-    with tabs[4]:
-        st.markdown("### Adversarial Search")
-        a,b = st.columns(2)
-        a.metric("Minimax", suite["adversarial"]["Minimax"])
-        b.metric("Alpha-Beta", suite["adversarial"]["Alpha-Beta"])
-        st.caption("Minimax and Alpha-Beta pruning are implemented as adversarial-search demonstrations.")
-
-    with tabs[5]:
-        st.markdown("### Knowledge Representation & Reasoning")
-        logic = suite["logic"]
-        st.write("**Initial facts:**", ", ".join(logic["facts"]))
-        st.write("**Forward-chained facts:**", ", ".join(logic["derived"]))
-        st.write("**Backward chaining:**", "Goal proved" if logic["backward_chaining_positive_state"] else "Goal not proved")
-        st.markdown("### CSP")
+    with st.expander("🧩 CSP Validation"):
         st.json(suite["csp"])
-        st.caption("Forward chaining, backward chaining and a constraint-satisfaction demonstration are included in the project.")
+        st.caption("The constraint layer checks whether the evidence needed for a complete AI analysis is available.")
+
+    with st.expander("🎮 Adversarial Search"):
+        st.write("Minimax and Alpha-Beta remain available as scenario-search components; they are not presented as stock-price predictors.")
+
+    with st.expander("📄 Earnings Transcript"):
+        if ts:
+            st.write(ts["text"])
+        else:
+            st.info("Run the full AI analysis with a quarter that has a transcript.")
+
+else:
+    st.info("Click **Run Full AI Analysis** to execute the integrated AI pipeline.")
 
 st.markdown('<div class="footer">Earnings Intelligence • Research / educational prototype • Data availability and freshness can vary. Not investment advice.</div>',unsafe_allow_html=True)
