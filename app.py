@@ -151,4 +151,90 @@ with st.expander("🔧 Technical Details"):
     st.write("Resolver:",company.get("resolver"))
     st.write("Retrieved fields:",", ".join(sorted(data["available_fields"])))
 
+
+
+# =============================
+# AI Syllabus Lab
+# =============================
+st.markdown("## 🧠 AI Syllabus Lab")
+st.caption("Algorithms from the AI course are applied to the live company analysis pipeline.")
+
+try:
+    from src.syllabus_ai import run_syllabus_suite
+    transcript_score = float(st.session_state.get("transcript_score", 0.0))
+    if st.button("⚙️ Run AI Syllabus Analysis", type="primary"):
+        with st.spinner("Running Decision Tree, K-Means, search, optimization and reasoning algorithms..."):
+            suite = run_syllabus_suite(history, transcript_score)
+        st.session_state["ai_suite"] = suite
+except Exception as exc:
+    st.warning("AI syllabus module is not ready yet.")
+    st.caption(str(exc))
+
+if "ai_suite" in st.session_state:
+    suite = st.session_state["ai_suite"]
+    tabs = st.tabs(["🌳 ML", "🔵 K-Means", "🔎 Search", "🧬 Optimization", "🎮 Adversarial", "🧠 Logic & CSP"])
+
+    with tabs[0]:
+        st.markdown("### Decision Tree")
+        tree = suite["decision_tree"]
+        if tree:
+            a,b,c,d = st.columns(4)
+            a.metric("Prediction", tree["prediction"])
+            b.metric("Confidence", f'{tree["confidence"]*100:.1f}%')
+            c.metric("Test Accuracy", f'{tree["accuracy"]*100:.1f}%')
+            d.metric("Tree Depth", tree["depth"])
+            st.dataframe(tree["importance"], use_container_width=True, hide_index=True)
+            st.caption("The tree is trained on historical price-derived features and classifies the next 20-day return regime.")
+        else:
+            st.info("Not enough historical data to train the Decision Tree.")
+
+    with tabs[1]:
+        st.markdown("### K-Means Market Regimes")
+        km = suite["kmeans"]
+        if km:
+            a,b = st.columns(2)
+            a.metric("Current Cluster", km["cluster"])
+            b.metric("Silhouette Score", f'{km["silhouette"]:.3f}')
+            st.success(f'Current regime: **{km["regime"]}**')
+            kdata = km["data"].copy()
+            kdata["Cluster"] = km["labels"]
+            st.dataframe(kdata.tail(25), use_container_width=True, hide_index=True)
+            st.caption("K-Means groups historical market windows by return, momentum and volatility.")
+        else:
+            st.info("Not enough historical data for clustering.")
+
+    with tabs[2]:
+        st.markdown("### Search Algorithms")
+        st.caption("Graph search over the project's financial-analysis dependency graph.")
+        for name, result in suite["search"].items():
+            if isinstance(result, tuple):
+                path, cost = result
+                st.write(f"**{name}:** {' → '.join(path)}  | cost = {cost}")
+            else:
+                st.write(f"**{name}:** {' → '.join(result)}")
+
+    with tabs[3]:
+        st.markdown("### Optimization Algorithms")
+        a,b = st.columns(2)
+        a.metric("Hill Climbing optimum", suite["optimization"]["Hill Climbing optimum"])
+        b.metric("Genetic Algorithm optimum", suite["optimization"]["Genetic Algorithm optimum"])
+        st.caption("Small deterministic optimization demonstrations mapped into the AI analysis lab.")
+
+    with tabs[4]:
+        st.markdown("### Adversarial Search")
+        a,b = st.columns(2)
+        a.metric("Minimax", suite["adversarial"]["Minimax"])
+        b.metric("Alpha-Beta", suite["adversarial"]["Alpha-Beta"])
+        st.caption("Minimax and Alpha-Beta pruning are implemented as adversarial-search demonstrations.")
+
+    with tabs[5]:
+        st.markdown("### Knowledge Representation & Reasoning")
+        logic = suite["logic"]
+        st.write("**Initial facts:**", ", ".join(logic["facts"]))
+        st.write("**Forward-chained facts:**", ", ".join(logic["derived"]))
+        st.write("**Backward chaining:**", "Goal proved" if logic["backward_chaining_positive_state"] else "Goal not proved")
+        st.markdown("### CSP")
+        st.json(suite["csp"])
+        st.caption("Forward chaining, backward chaining and a constraint-satisfaction demonstration are included in the project.")
+
 st.markdown('<div class="footer">Earnings Intelligence • Research / educational prototype • Data availability and freshness can vary. Not investment advice.</div>',unsafe_allow_html=True)
