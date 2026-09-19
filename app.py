@@ -6,132 +6,149 @@ from src.analysis import build_snapshot
 from src.transcript_analysis import transcript_summary
 
 st.set_page_config(page_title="Earnings Intelligence", page_icon="📈", layout="wide")
-st.title("📈 Earnings Intelligence")
-st.caption("Version 2.0 — automatic company lookup and live market/financial data")
+
+st.markdown("""
+<style>
+.stApp{background:radial-gradient(circle at 85% 5%,rgba(124,92,255,.14),transparent 28%),radial-gradient(circle at 10% 80%,rgba(53,167,255,.08),transparent 25%),#070b14;color:#f5f7fb}
+[data-testid="stSidebar"]{background:#080d17;border-right:1px solid #1d2a3d}
+.block-container{max-width:1500px;padding-top:1.4rem}
+h1,h2,h3{color:#f5f7fb!important}
+[data-testid="stMetric"]{background:linear-gradient(145deg,#111a2b,#0b111d);border:1px solid #1d2a3d;border-radius:16px;padding:15px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+[data-testid="stMetricLabel"]{color:#8d9ab0!important}
+[data-testid="stMetricValue"]{color:#f5f7fb!important}
+div[data-baseweb="input"]{background:#0d1422;border-radius:12px}
+.stButton>button,.stFormSubmitButton>button{border-radius:11px;border:1px solid #31527b;background:linear-gradient(135deg,#1769aa,#6251e8);color:white;font-weight:700}
+.stButton>button:hover,.stFormSubmitButton>button:hover{box-shadow:0 0 22px rgba(53,167,255,.2)}
+.hero{background:radial-gradient(circle at 95% 10%,rgba(124,92,255,.2),transparent 30%),linear-gradient(145deg,#111a2c,#0a101c);border:1px solid #22334c;border-radius:22px;padding:24px 28px;margin:8px 0 20px}
+.hero-title{font-size:2rem;font-weight:800}.hero-sub{color:#8d9ab0}.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:rgba(53,167,255,.1);border:1px solid rgba(53,167,255,.25);color:#68beff;font-size:.78rem;font-weight:700}
+.insight{background:rgba(124,92,255,.08);border:1px solid rgba(124,92,255,.22);border-radius:14px;padding:15px;color:#d9d5ff}
+.footer{color:#66758d;font-size:.78rem;text-align:center;padding:25px}
+</style>
+""", unsafe_allow_html=True)
+
+# Sidebar
+with st.sidebar:
+    st.markdown("## 🔷 Earnings Intelligence")
+    st.caption("AI-Powered Market Intelligence")
+    st.divider()
+    st.markdown("### Navigation")
+    st.markdown("🏠 **Dashboard**")
+    st.markdown("🏢 Company Analysis")
+    st.markdown("🎙️ Earnings Call")
+    st.markdown("📊 Financials")
+    st.markdown("🧠 AI Analysis")
+    st.divider()
+    st.caption("Real-time financial data + FinBERT")
+    st.caption("Research / educational prototype")
+
+st.markdown('<div class="hero"><div class="hero-title">📈 Earnings Intelligence</div><div class="hero-sub">Real-time financial analysis powered by market data, earnings transcripts and AI sentiment.</div></div>', unsafe_allow_html=True)
 
 with st.form("company_search"):
-    query = st.text_input("Search for a company", placeholder="Try Apple, Microsoft, Tesla, NVIDIA, Amazon...")
-    submitted = st.form_submit_button("🔎 Analyze company", type="primary")
+    c1,c2=st.columns([5,1])
+    with c1:
+        query=st.text_input("Search company",placeholder="Try Apple, Microsoft, Tesla, NVIDIA, Amazon...",label_visibility="collapsed")
+    with c2:
+        submitted=st.form_submit_button("🔎 Analyze",type="primary",use_container_width=True)
 
 if submitted:
     if not query.strip():
         st.warning("Enter a company name or ticker.")
         st.stop()
-    with st.spinner(f"Finding and analyzing {query.strip()}..."):
+    with st.spinner(f"Analyzing {query.strip()}..."):
         try:
-            company = resolve_company(query.strip())
-            data = fetch_company_data(company["ticker"])
-            snapshot = build_snapshot(company, data)
+            company=resolve_company(query.strip())
+            data=fetch_company_data(company["ticker"])
+            snapshot=build_snapshot(company,data)
         except Exception as exc:
             st.error("We could not retrieve this company right now.")
             st.exception(exc)
             st.stop()
-    st.session_state.update(company=company, data=data, snapshot=snapshot)
+    st.session_state.update(company=company,data=data,snapshot=snapshot)
 
 if "company" not in st.session_state:
-    st.info("Search for a public company to begin. No CSV upload is required in Version 2.0.")
-    st.markdown("### What Version 2.0 does\n**Company name → ticker → live data → automatic analysis → dashboard**")
+    st.info("Search for a public company to begin.")
+    st.markdown("### What happens next")
+    st.markdown("**Company → Live market data → Earnings transcript → FinBERT → AI analysis → Dashboard**")
     st.stop()
 
-company = st.session_state["company"]
-data = st.session_state["data"]
-snapshot = st.session_state["snapshot"]
+company=st.session_state["company"]
+data=st.session_state["data"]
+snapshot=st.session_state["snapshot"]
 
-st.subheader(f"{company['name']} ({company['ticker']})")
-st.caption(f"{company.get('exchange') or 'Public market'} • Data source: Yahoo Finance via yfinance")
+st.markdown(f'<div class="hero"><span class="pill">{company["ticker"]}</span><div class="hero-title">{company["name"]}</div><div class="hero-sub">{company.get("exchange") or "Public market"} • Yahoo Finance • Live financial snapshot</div></div>',unsafe_allow_html=True)
 
-c1,c2,c3,c4 = st.columns(4)
-c1.metric("Current price", f"{snapshot['current_price']:,.2f}" if snapshot["current_price"] is not None else "N/A",
-          f"{snapshot['change_pct']:+.2f}%" if snapshot["change_pct"] is not None else None)
-c2.metric("Market cap", snapshot["market_cap_display"])
-c3.metric("52-week change", f"{snapshot['52w_change']:+.2f}%" if snapshot["52w_change"] is not None else "N/A")
-c4.metric("Data sources", len(data["available_fields"]))
+c1,c2,c3,c4,c5=st.columns(5)
+c1.metric("Current Price",f'{snapshot["current_price"]:,.2f}' if snapshot["current_price"] is not None else "N/A",f'{snapshot["change_pct"]:+.2f}%' if snapshot["change_pct"] is not None else None)
+c2.metric("Market Cap",snapshot["market_cap_display"])
+c3.metric("52W Change",f'{snapshot["52w_change"]:+.2f}%' if snapshot["52w_change"] is not None else "N/A")
+c4.metric("P/E",snapshot["pe_display"])
+c5.metric("Data Fields",len(data["available_fields"]))
 
-st.divider()
-st.subheader("📊 Price performance")
-period = st.radio("Period", ["1M","3M","6M","1Y","5Y"], horizontal=True, index=2)
+st.markdown("### 📊 Market Performance")
+period=st.radio("Time period",["1M","3M","6M","1Y","5Y"],horizontal=True,index=2)
 period_map={"1M":"1mo","3M":"3mo","6M":"6mo","1Y":"1y","5Y":"5y"}
-history=data["ticker"].history(period=period_map[period], auto_adjust=True)
+history=data["ticker"].history(period=period_map[period],auto_adjust=True)
 if history is not None and not history.empty:
     fig=go.Figure()
-    fig.add_trace(go.Scatter(x=history.index,y=history["Close"],mode="lines",name="Close"))
-    fig.update_layout(height=420,margin=dict(l=10,r=10,t=20,b=10),xaxis_title="Date",yaxis_title="Price",hovermode="x unified")
+    fig.add_trace(go.Scatter(x=history.index,y=history["Close"],mode="lines",name="Close",line=dict(width=2.5)))
+    fig.update_layout(height=390,margin=dict(l=10,r=10,t=15,b=10),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#aeb8c8"),xaxis=dict(showgrid=False),yaxis=dict(gridcolor="#182437"),hovermode="x unified")
     st.plotly_chart(fig,use_container_width=True)
 else:
     st.warning("Historical price data is unavailable for this period.")
 
-st.subheader("🏢 Company snapshot")
-left,right=st.columns(2)
+left,right=st.columns([1,1])
 with left:
-    st.markdown(f"**Industry:** {data['info'].get('industry') or 'N/A'}")
-    st.markdown(f"**Sector:** {data['info'].get('sector') or 'N/A'}")
-    st.markdown(f"**Employees:** {snapshot['employees_display']}")
-    st.markdown(f"**Currency:** {data['info'].get('currency') or 'N/A'}")
+    st.markdown("### 🏢 Company Snapshot")
+    st.markdown(f'<div class="insight"><b>Industry:</b> {data["info"].get("industry") or "N/A"}<br><b>Sector:</b> {data["info"].get("sector") or "N/A"}<br><b>Employees:</b> {snapshot["employees_display"]}<br><b>Currency:</b> {data["info"].get("currency") or "N/A"}<br><br><b>Revenue:</b> {snapshot["revenue_display"]}<br><b>Profit Margin:</b> {snapshot["profit_margin_display"]}<br><b>P/E:</b> {snapshot["pe_display"]}</div>',unsafe_allow_html=True)
+
 with right:
-    st.markdown(f"**Revenue (latest):** {snapshot['revenue_display']}")
-    st.markdown(f"**Profit margin:** {snapshot['profit_margin_display']}")
-    st.markdown(f"**P/E:** {snapshot['pe_display']}")
-    st.markdown(f"**Dividend yield:** {snapshot['dividend_display']}")
+    st.markdown("### 🤖 Automatic AI Analysis")
+    a,b,c=st.columns(3)
+    a.metric("Momentum",snapshot["momentum_label"])
+    b.metric("52W Position",snapshot["range_label"])
+    c.metric("Data Quality",snapshot["data_quality"])
+    st.info(snapshot["interpretation"])
 
-if data["info"].get("longBusinessSummary"):
-    with st.expander("Company description"):
-        st.write(data["info"]["longBusinessSummary"])
-
-st.subheader("💰 Quarterly financials")
+st.markdown("### 💰 Quarterly Financials")
 if not data["financials"].empty:
     st.dataframe(data["financials"],use_container_width=True)
 else:
     st.info("Detailed quarterly financial statement data was unavailable.")
 
-st.subheader("🧾 Earnings dates")
+st.markdown("### 🧾 Earnings Information")
 if not data["earnings"].empty:
     st.dataframe(data["earnings"],use_container_width=True)
 else:
     st.info("Recent earnings-date information was unavailable.")
 
-st.subheader("🤖 Automatic V2.0 analysis")
-a,b,c=st.columns(3)
-a.metric("Price momentum",snapshot["momentum_label"])
-b.metric("52-week position",snapshot["range_label"])
-c.metric("Data quality",snapshot["data_quality"])
-st.info(snapshot["interpretation"])
-st.caption("V2.0 is a research/educational data-retrieval prototype, not investment advice. Data availability and freshness can vary.")
-with st.expander("🔧 Technical details"):
+st.markdown("### 🎙️ Earnings Call AI Analysis")
+quarter=st.text_input("Earnings quarter (YYYYQM)",value="2025Q4")
+if st.button("🧠 Analyze Earnings Call",type="primary"):
+    with st.spinner("Retrieving transcript and running FinBERT..."):
+        try:
+            ts=transcript_summary(company["ticker"],quarter)
+            if ts is None:
+                st.warning("No transcript available for this quarter.")
+            else:
+                c1,c2,c3=st.columns(3)
+                c1.metric("Transcript Entries",ts["entries"])
+                c2.metric("AI Sentiment",ts["label"])
+                c3.metric("Sentiment Score",f'{ts["average_sentiment"]:.3f}')
+                if ts["label"]=="Positive":
+                    st.success("Management sentiment is predominantly positive.")
+                elif ts["label"]=="Negative":
+                    st.error("Management sentiment is predominantly negative.")
+                else:
+                    st.info("Management sentiment is relatively neutral.")
+                with st.expander("📄 View Earnings Transcript"):
+                    st.write(ts["text"])
+        except Exception as exc:
+            st.error("Could not retrieve the transcript.")
+            st.exception(exc)
+
+with st.expander("🔧 Technical Details"):
     st.write("Ticker:",company["ticker"])
     st.write("Resolver:",company.get("resolver"))
     st.write("Retrieved fields:",", ".join(sorted(data["available_fields"])))
-from src.transcript_analysis import transcript_summary
-from src.transcript_analysis import transcript_summary
 
-st.divider()
-st.subheader('🎙️ Earnings Call Analysis')
-
-quarter = st.text_input('Earnings quarter (YYYYQM)', value='2025Q4')
-
-if st.button('Analyze earnings call'):
-    with st.spinner('Retrieving earnings transcript...'):
-        try:
-            ts = transcript_summary(company['ticker'], quarter)
-
-            if ts is None:
-                st.warning('No transcript available for this quarter.')
-            else:
-                c1, c2, c3 = st.columns(3)
-
-                c1.metric('Transcript entries', ts['entries'])
-                c2.metric('AI sentiment', ts['label'])
-                c3.metric('Sentiment score', f"{ts['average_sentiment']:.3f}")
-
-                if ts['label'] == 'Positive':
-                    st.success('Management sentiment is predominantly positive.')
-                elif ts['label'] == 'Negative':
-                    st.error('Management sentiment is predominantly negative.')
-                else:
-                    st.info('Management sentiment is relatively neutral.')
-
-                with st.expander('View earnings transcript'):
-                    st.write(ts['text'])
-
-        except Exception as exc:
-            st.error('Could not retrieve the transcript.')
-            st.exception(exc)
+st.markdown('<div class="footer">Earnings Intelligence • Research / educational prototype • Data availability and freshness can vary. Not investment advice.</div>',unsafe_allow_html=True)
